@@ -6,31 +6,29 @@
     <title>LOLY</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; }
-        html, body {
-            width: 100%;
-            height: 100vh;          /* 固定高度，禁止整体滚动 */
-            overflow: hidden;       /* 禁止外层滚动 */
-            background: #1a1a1a;
-            margin: 0;
-            padding: 0;
-        }
         body {
+            background: #1a1a1a;
             display: flex;
             justify-content: center;
             align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
         }
-        /* ===== 手机容器：完全占满屏幕，保留圆角 ===== */
+        /* ===== 手机容器：铺满屏幕但留出地址栏空间，保留圆角 ===== */
         .phone {
             width: 100%;
-            height: 100vh;          /* 与父容器一致 */
             max-width: 100%;
+            height: calc(100vh - 60px);   /* 为浏览器地址栏预留空间 */
+            max-height: calc(100vh - 60px);
             aspect-ratio: auto;
             background: #f5f5f5;
             border-radius: 40px;
             padding: 0;
             box-shadow: 0 20px 60px rgba(0,0,0,0.8), inset 0 0 0 2px #333;
             position: relative;
-            overflow: hidden;       /* 隐藏溢出内容，圆角裁剪 */
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             touch-action: pan-y;
@@ -73,12 +71,6 @@
         }
         .page.active { display: flex; }
 
-        /* ===== 底部 Logo 默认隐藏，仅在主页显示 ===== */
-        .page-footer { display: none; text-align: center; font-size: 13px; color: #bbb; padding: 6px 0 2px 0; letter-spacing: 3px; flex-shrink: 0; user-select: none; }
-        #homePage .page-footer { display: block; }
-        .page-footer .loly-mark { color: #bbb; font-weight: 400; }
-        .page-footer .dec { color: #ccc; }
-
         /* ===== 主页 ===== */
         #homePage { gap: 12px; padding: 12px 12px 4px 12px; background: transparent; }
         .home-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; flex: 1; align-content: center; }
@@ -89,6 +81,10 @@
         .home-item .icon-img svg { width: 28px; height: 28px; flex-shrink: 0; }
         .home-item .label { font-size: 14px; font-weight: 500; color: #333; }
         .home-item .sub { font-size: 10px; color: #aaa; font-weight: 400; }
+
+        .page-footer { text-align: center; font-size: 13px; color: #bbb; padding: 6px 0 2px 0; letter-spacing: 3px; flex-shrink: 0; user-select: none; }
+        .page-footer .loly-mark { color: #bbb; font-weight: 400; }
+        .page-footer .dec { color: #ccc; }
 
         #chatApp { height: 100%; display: none; flex-direction: column; background: transparent; }
         #chatApp.active { display: flex; }
@@ -625,7 +621,7 @@
                     </svg>
                 </div>
             </div>
-            <!-- 此处不再有 .page-footer，已全局隐藏，仅主页显示 -->
+            <div class="page-footer"><span class="dec">✧</span><span class="loly-mark"> LOLY </span><span class="dec">✧</span></div>
         </div>
 
         <!-- 聊天详情页 -->
@@ -693,7 +689,7 @@
                     <div id="apiStatus" class="status-msg">保存后即可使用</div>
                 </div>
             </div>
-            <!-- 无 .page-footer -->
+            <div class="page-footer"><span class="dec">✧</span><span class="loly-mark"> LOLY </span><span class="dec">✧</span></div>
         </div>
 
         <!-- 美化页面 -->
@@ -827,7 +823,7 @@
                 <!-- 5. 总保存按钮 -->
                 <button class="btn-save-all" onclick="saveAllBeautify()">保存全部美化</button>
             </div>
-            <!-- 无 .page-footer -->
+            <div class="page-footer"><span class="dec">✧</span><span class="loly-mark"> LOLY </span><span class="dec">✧</span></div>
         </div>
 
         <!-- 弹窗 -->
@@ -1183,7 +1179,7 @@
                 '<label>头像</label>' +
                 '<div class="avatar-upload">' +
                 '<div class="preview" id="newAvatarPreview"></div>' +
-                '<input type="file" id="newAvatarFile" accept="image/*" class="file-input-hidden" />' +
+                '<input type="file" id="newAvatarFile" accept="image/*" class="file-input-hidden" onchange="previewNewAvatar(event)" />' +
                 '<button class="upload-btn" onclick="document.getElementById(\'newAvatarFile\').click();">选择图片</button>' +
                 '<span class="hint">从相册中选择</span>' +
                 '</div>' +
@@ -1241,13 +1237,13 @@
         }
 
         var editContactId = null;
-        var editContactAvatarData = null;
+        var editContactAvatarData = null;  // null表示未修改
 
         function showEditContact(id) {
             var contact = data.contacts.find(function(c) { return c.id === id; });
             if (!contact) return;
             editContactId = id;
-            editContactAvatarData = contact.avatar || '';
+            editContactAvatarData = null;   // 初始为null，表示没有修改头像
             var modal = document.getElementById('modalBox');
             modal.innerHTML =
                 '<div class="modal-title">编辑角色</div>' +
@@ -1256,7 +1252,7 @@
                 '<div class="avatar-upload">' +
                 '<div class="preview" id="editAvatarPreview" style="background-image:url(\'' + (contact.avatar || '') +
                 '\');background-color:' + (!contact.avatar ? '#e0e0e0' : 'transparent') + ';"></div>' +
-                '<input type="file" id="editAvatarFile" accept="image/*" class="file-input-hidden" />' +
+                '<input type="file" id="editAvatarFile" accept="image/*" class="file-input-hidden" onchange="previewEditAvatar(event)" />' +
                 '<button class="upload-btn" onclick="document.getElementById(\'editAvatarFile\').click();">选择图片</button>' +
                 '<button class="btn-reset" onclick="resetContactAvatar()" style="margin-top:4px;padding:4px 12px;border:none;border-radius:12px;background:#ffcccc;color:#cc0000;cursor:pointer;">恢复默认头像</button>' +
                 '</div>' +
@@ -1283,14 +1279,15 @@
             if (!file) return;
             var reader = new FileReader();
             reader.onload = function(e) {
-                editContactAvatarData = e.target.result;
+                editContactAvatarData = e.target.result;   // 保存base64
                 document.getElementById('editAvatarPreview').style.backgroundImage = 'url(' + e.target.result + ')';
+                showToast('头像已上传，保存后生效');
             };
             reader.readAsDataURL(file);
         }
 
         function resetContactAvatar() {
-            editContactAvatarData = '';
+            editContactAvatarData = '';   // 空字符串表示清空头像
             document.getElementById('editAvatarPreview').style.backgroundImage = '';
             document.getElementById('editAvatarPreview').style.backgroundColor = '#e0e0e0';
             showToast('头像已恢复默认');
@@ -1303,7 +1300,8 @@
             contact.age = document.getElementById('editContactAge').value.trim();
             contact.group = document.getElementById('editContactGroup').value || '其他';
             contact.bio = document.getElementById('editContactBio').value.trim();
-            if (editContactAvatarData !== null && editContactAvatarData !== undefined) {
+            // 如果 editContactAvatarData 不为 null，则更新头像（包含空字符串情况）
+            if (editContactAvatarData !== null) {
                 contact.avatar = editContactAvatarData;
             }
             saveData();
@@ -1314,6 +1312,7 @@
                 document.getElementById('detailTitle').textContent = contact.name;
                 renderDetailChat();
             }
+            showToast('角色资料已更新');
         }
 
         // ================================================================
@@ -1626,7 +1625,7 @@
                 '<div class="avatar-upload">' +
                 '<div class="preview" id="editMyAvatarPreview" style="background-image:url(\'' + (p.avatar || '') +
                 '\');background-color:' + (!p.avatar ? '#e0e0e0' : 'transparent') + ';"></div>' +
-                '<input type="file" id="editMyAvatarFile" accept="image/*" class="file-input-hidden" />' +
+                '<input type="file" id="editMyAvatarFile" accept="image/*" class="file-input-hidden" onchange="previewEditMyAvatar(event)" />' +
                 '<button class="upload-btn" onclick="document.getElementById(\'editMyAvatarFile\').click();">选择图片</button>' +
                 '<button class="btn-reset" onclick="resetEditMyAvatar()" style="margin-top:4px;padding:4px 12px;border:none;border-radius:12px;background:#ffcccc;color:#cc0000;cursor:pointer;">恢复默认头像</button>' +
                 '</div>' +
@@ -1971,7 +1970,7 @@
         }
 
         // ================================================================
-        // 消息操作菜单
+        // 消息操作菜单（修复坐标与显示）
         // ================================================================
         function showMsgMenu(e, idx, role) {
             e.stopPropagation();
@@ -1979,10 +1978,13 @@
             currentMenuMsgIdx = idx;
             currentMenuMsgRole = role;
             var menu = document.getElementById('msgMenu');
+            menu.style.display = 'flex';
             menu.classList.add('show');
+
             var touch = e.touches ? e.touches[0] : e;
-            var x = touch.clientX || e.clientX || 0;
-            var y = touch.clientY || e.clientY || 0;
+            var x = touch.pageX || e.pageX || 0;
+            var y = touch.pageY || e.pageY || 0;
+
             var menuWidth = 220,
                 menuHeight = 62;
             var winW = window.innerWidth,
@@ -2016,7 +2018,9 @@
         }
 
         function hideMsgMenu() {
-            document.getElementById('msgMenu').classList.remove('show');
+            var menu = document.getElementById('msgMenu');
+            menu.style.display = 'none';
+            menu.classList.remove('show');
             currentMenuMsgIdx = null;
             currentMenuMsgRole = null;
         }
@@ -2917,7 +2921,6 @@
                 }
             }
 
-            // 绑定文件输入事件（用 display:none 方式，直接通过 onclick 触发）
             document.getElementById('bgFileInput').addEventListener('change', function(e) {
                 var file = e.target.files[0];
                 if (!file) return;
@@ -2951,7 +2954,6 @@
                 this.value = '';
             });
 
-            // 图标点击设置 data-target
             document.querySelectorAll('.icon-item').forEach(function(item) {
                 item.addEventListener('click', function() {
                     var app = this.getAttribute('data-app');
@@ -2961,8 +2963,6 @@
                     }
                 });
             });
-
-            // 选择背景按钮已经通过 onclick 绑定，无需额外绑定
 
             applyBeautifySettings();
             updateHomeIcons();
