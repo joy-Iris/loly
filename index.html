@@ -16,17 +16,17 @@
             padding: 0;
             overflow: hidden;
         }
-        /* ===== 手机容器：铺满屏幕但留出地址栏空间，保留圆角 ===== */
+        /* ===== 手机容器：铺满屏幕但留出地址栏空间，保留圆角，清晰边框 ===== */
         .phone {
             width: 100%;
             max-width: 100%;
-            height: calc(100vh - 60px);   /* 为浏览器地址栏预留空间 */
+            height: calc(100vh - 60px);
             max-height: calc(100vh - 60px);
             aspect-ratio: auto;
             background: #f5f5f5;
             border-radius: 40px;
             padding: 0;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.8), inset 0 0 0 2px #333;
+            border: 2px solid #333;          /* 清晰边框，替代模糊阴影 */
             position: relative;
             overflow: hidden;
             display: flex;
@@ -1234,6 +1234,7 @@
             closeModal();
             renderContactList();
             renderChatList();
+            showToast('联系人已创建');   // 添加提示
         }
 
         var editContactId = null;
@@ -1281,7 +1282,7 @@
             reader.onload = function(e) {
                 editContactAvatarData = e.target.result;   // 保存base64
                 document.getElementById('editAvatarPreview').style.backgroundImage = 'url(' + e.target.result + ')';
-                showToast('头像已上传，保存后生效');
+                showToast('头像已上传，保存后生效');   // 提示上传成功
             };
             reader.readAsDataURL(file);
         }
@@ -1300,7 +1301,6 @@
             contact.age = document.getElementById('editContactAge').value.trim();
             contact.group = document.getElementById('editContactGroup').value || '其他';
             contact.bio = document.getElementById('editContactBio').value.trim();
-            // 如果 editContactAvatarData 不为 null，则更新头像（包含空字符串情况）
             if (editContactAvatarData !== null) {
                 contact.avatar = editContactAvatarData;
             }
